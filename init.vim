@@ -15,8 +15,10 @@ Plug 'dense-analysis/ale'
 Plug 'scrooloose/nerdcommenter'
 Plug 'ncm2/ncm2'
 Plug 'roxma/nvim-yarp'
-Plug 'roxma/ncm-clang'
+" Plug 'roxma/ncm-clang'
+Plug 'ncm2/ncm2-pyclang'
 Plug 'dense-analysis/ale'
+Plug 'fgrsnau/ncm2-aspell'
 " enable ncm2 for all buffers
 autocmd BufEnter * call ncm2#enable_for_buffer()
 " IMPORTANT: :help Ncm2PopupOpen for more information
@@ -86,6 +88,32 @@ let g:ale_linters = {
     " (optional, for completion performance) run linters only when I save files
     let g:ale_lint_on_text_changed = 'never'
     let g:ale_lint_on_enter = 0
+" path to directory where libclang.so can be found
+let g:ncm2_pyclang#library_path = '/usr/lib/llvm-6.0/lib'
+
+" or path to the libclang.so file
+let g:ncm2_pyclang#library_path = '/usr/lib/libclang-6.0.so'	
+" default key mapping is annoying
+    let g:clang_make_default_keymappings = 0
+    " ncm-clang is auto detecting compile_commands.json and .clang_complete
+    " file
+    let g:clang_auto_user_options = ''
+
+    func WrapClangGoTo()
+        let cwd = getcwd()
+        let info = ncm_clang#compilation_info()
+        exec 'cd ' . info['directory']
+        try
+            let b:clang_user_options = join(info['args'], ' ')
+            call g:ClangGotoDeclaration()
+        catch
+        endtry
+        " restore
+        exec 'cd ' . cwd
+    endfunc
+
+    " map to gd key
+    autocmd FileType c,cpp nnoremap <buffer> gd :call WrapClangGoTo()<CR>
 "Base Configure
 set nocompatible "关闭与vi的兼容模式
 set number  "显示绝对行号
